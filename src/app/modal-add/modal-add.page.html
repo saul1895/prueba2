@@ -1,0 +1,82 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Nueva meta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="goalForm" style="text-align: center;">
+    <ion-item>
+      <ion-label>Tipo de meta:</ion-label>
+      <ion-select placeholder="Seleccionar" formControlName="type">
+        <ion-select-option value="Comprar algo">Comprar algo</ion-select-option>
+        <ion-select-option value="Viajar">Viajar</ion-select-option>
+        <ion-select-option value="Hacer algo">Hacer algo</ion-select-option>
+        <ion-select-option value="Solo Ahorrar">Solo Ahorrar</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-datetime presentation="date" format="YYYY-MM-DD" [min]="dateFormat" formControlName="date"></ion-datetime>
+    <ion-item>
+      <ion-label>Monto:</ion-label>
+      <ion-input formControlName="amount" pattern="^[0-9]+"></ion-input>
+    </ion-item>
+  </form>
+
+  <br>
+  <ion-card [ngClass]="{'inactive-section': goalForm.invalid}">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="10">
+              Mis reglas
+            </ion-col>
+            <ion-col size="2">
+              <ion-button (click)="activeRulesForm()" [disabled]="goalForm.invalid" *ngIf="rules.length < 5">
+                <ion-icon name="add"></ion-icon>
+              </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <form [formGroup]="ruleForm" style="text-align: center;" *ngIf="showRulesForm">
+        <ion-item>
+          <ion-label>Equipo:</ion-label>
+          <ion-select placeholder="Seleccionar" formControlName="team">
+            <ion-select-option value="Equipo 1">Equipo 1</ion-select-option>
+            <ion-select-option value="Equipo 2">Equipo 2</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label>Evento:</ion-label>
+          <ion-select placeholder="Seleccionar" formControlName="event">
+            <ion-select-option value="Jugar">Jugar</ion-select-option>
+            <ion-select-option value="Ganar">Ganar</ion-select-option>
+            <ion-select-option value="Gol">Gol</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label>Cantidad a ahorrar:</ion-label>
+          <ion-input formControlName="amount" pattern="^[0-9]+"></ion-input>
+        </ion-item>
+        <br>
+        <ion-button type="submit" color="primary" [disabled]="ruleForm.invalid" (click)="addRules()" style="width: 50%;">AGREGAR</ion-button>
+        <ion-button color="secondary" (click)="cancelRulesForm()" style="width: 50%;">CANCELAR</ion-button>
+      </form>
+      <ion-list>
+        <ion-item *ngFor="let rule of rules">
+          <ion-label>{{rule.team}} / Ahorrar ${{rule.amount}} por {{rule.event}}</ion-label>
+        </ion-item>
+        <ion-item *ngIf="rules.length == 0">
+          <ion-label>Aun no agregas ninguna regla</ion-label>
+        </ion-item>
+      </ion-list>
+      <form style="text-align: center;" *ngIf="rules.length > 0 && goalForm.valid">
+        <ion-button type="submit" color="primary" style="width: 50%;" (click)="save()">GUARDAR</ion-button>
+      </form>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
