@@ -1,29 +1,34 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Nueva meta</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModel()">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{title}}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <form [formGroup]="goalForm" style="text-align: center;">
+  <form [formGroup]="goalForm" class="form-center">
     <ion-item>
       <ion-label>Tipo de meta:</ion-label>
-      <ion-select placeholder="Seleccionar" formControlName="type">
+      <ion-select placeholder="Seleccionar" formControlName="type" [disabled]="newGoal == 'V'">
         <ion-select-option value="Comprar algo">Comprar algo</ion-select-option>
         <ion-select-option value="Viajar">Viajar</ion-select-option>
         <ion-select-option value="Hacer algo">Hacer algo</ion-select-option>
         <ion-select-option value="Solo Ahorrar">Solo Ahorrar</ion-select-option>
       </ion-select>
     </ion-item>
-    <ion-datetime presentation="date" format="YYYY-MM-DD" [min]="dateFormat" formControlName="date"></ion-datetime>
+    <ion-datetime presentation="date" size="cover" format="YYYY-MM-DD" [min]="dateFormat" formControlName="date" [disabled]="newGoal == 'V'"></ion-datetime>
     <ion-item>
-      <ion-label>Monto:</ion-label>
-      <ion-input formControlName="amount" pattern="^[0-9]+"></ion-input>
+      <ion-label>Monto: $</ion-label>
+      <ion-input formControlName="amount" pattern="^[0-9]+" [disabled]="newGoal == 'V'"></ion-input>
     </ion-item>
   </form>
 
   <br>
-  <ion-card [ngClass]="{'inactive-section': goalForm.invalid}">
+  <ion-card [ngClass]="{'inactive-section': goalForm.invalid || newGoal == 'V'}">
     <ion-card-header>
       <ion-card-title>
         <ion-grid>
@@ -32,7 +37,7 @@
               Mis reglas
             </ion-col>
             <ion-col size="2">
-              <ion-button (click)="activeRulesForm()" [disabled]="goalForm.invalid" *ngIf="rules.length < 5">
+              <ion-button (click)="activeRulesForm()" [disabled]="goalForm.invalid" *ngIf="rules.length < 5 && newGoal != 'V'">
                 <ion-icon name="add"></ion-icon>
               </ion-button>
             </ion-col>
@@ -42,12 +47,11 @@
     </ion-card-header>
 
     <ion-card-content>
-      <form [formGroup]="ruleForm" style="text-align: center;" *ngIf="showRulesForm">
+      <form [formGroup]="ruleForm" class="form-center" *ngIf="showRulesForm">
         <ion-item>
           <ion-label>Equipo:</ion-label>
           <ion-select placeholder="Seleccionar" formControlName="team">
-            <ion-select-option value="Equipo 1">Equipo 1</ion-select-option>
-            <ion-select-option value="Equipo 2">Equipo 2</ion-select-option>
+            <ion-select-option *ngFor="let team of arrayTeams" [value]="team">{{team}}</ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
@@ -59,24 +63,50 @@
           </ion-select>
         </ion-item>
         <ion-item>
-          <ion-label>Cantidad a ahorrar:</ion-label>
+          <ion-label>Cantidad a ahorrar: $</ion-label>
           <ion-input formControlName="amount" pattern="^[0-9]+"></ion-input>
         </ion-item>
         <br>
-        <ion-button type="submit" color="primary" [disabled]="ruleForm.invalid" (click)="addRules()" style="width: 50%;">AGREGAR</ion-button>
-        <ion-button color="secondary" (click)="cancelRulesForm()" style="width: 50%;">CANCELAR</ion-button>
+        <ion-button type="submit" color="primary" [disabled]="ruleForm.invalid" (click)="addRules()" class="btn-w">{{btnAddRule}}</ion-button>
+        <ion-button color="secondary" (click)="cancelRulesForm()" class="btn-w">CANCELAR</ion-button>
       </form>
       <ion-list>
-        <ion-item *ngFor="let rule of rules">
+        <ion-item *ngFor="let rule of rules; let i = index" (click)="presentActionSheet(rule, i)">
           <ion-label>{{rule.team}} / Ahorrar ${{rule.amount}} por {{rule.event}}</ion-label>
         </ion-item>
         <ion-item *ngIf="rules.length == 0">
           <ion-label>Aun no agregas ninguna regla</ion-label>
         </ion-item>
       </ion-list>
-      <form style="text-align: center;" *ngIf="rules.length > 0 && goalForm.valid">
-        <ion-button type="submit" color="primary" style="width: 50%;" (click)="save()">GUARDAR</ion-button>
-      </form>
     </ion-card-content>
   </ion-card>
+  <form class="form-center">
+    <ion-button type="submit" color="primary" class="btn-w" (click)="save()" *ngIf="goalForm.valid && newGoal != 'V'">GUARDAR</ion-button>
+    <ion-button type="submit" color="primary" class="btn-w" (click)="simulate()" *ngIf="newGoal == 'V'">SIMULACIÓN</ion-button>
+
+    <ion-list *ngIf="dataJugar.data.length > 0">
+      <h5>{{dataJugar.team}}</h5>
+      <h5>Ahorrado: ${{dataJugar.totalSaved}}</h5>
+      <h5>Regla activada: {{dataJugar.data.length}}</h5>
+      <ion-item *ngFor="let item of dataJugar.data;" counter="true">
+        <ion-label>JUGAR: ${{ item.saved }}<br>ahorrado por jugar contra {{ item.opponent }}<br>el día {{ item.date | date }}</ion-label>
+      </ion-item>
+    </ion-list>
+    <ion-list *ngIf="dataGanar.data.length > 0">
+      <h5>{{dataJugar.team}}</h5>
+      <h5>Ahorrado: ${{dataGanar.totalSaved}}</h5>
+      <h5>Regla activada: {{dataGanar.data.length}}</h5>
+      <ion-item *ngFor="let item of dataGanar.data;" counter="true">
+        <ion-label>GANAR: ${{ item.saved }}<br>ahorrado por ganar contra {{ item.opponent }}<br>el día {{ item.date | date }}</ion-label>
+      </ion-item>
+    </ion-list>
+    <ion-list *ngIf="dataGol.data.length > 0">
+      <h5>{{dataGol.team}}</h5>
+      <h5>Ahorrado: ${{dataGol.totalSaved}}</h5>
+      <h5>Regla activada: {{dataGol.data.length}}</h5>
+      <ion-item *ngFor="let item of dataGol.data;" counter="true">
+        <ion-label>GOLES: ${{ item.saved  }}<br>por anotar {{ item.goles }} contra {{ item.opponent }}<br>el día {{ item.date | date }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </form>
 </ion-content>

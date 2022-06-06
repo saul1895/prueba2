@@ -22,7 +22,7 @@
               Mis metas
             </ion-col>
             <ion-col size="2">
-              <ion-button (click)="openModal()">
+              <ion-button (click)="openModal('N')">
                 <ion-icon name="add"></ion-icon>
               </ion-button>
             </ion-col>
@@ -33,8 +33,8 @@
 
     <ion-card-content>
       <ion-list>
-        <ion-item *ngFor="let goal of goalsList">
-          <ion-label>{{goal.type}} - {{goal.date | date}}</ion-label>
+        <ion-item *ngFor="let goal of goalsList; let i = index" (click)="presentActionSheet(goal, i)">
+          <ion-label>{{goal.type}} - {{goal.date | date}} | Ahorrar: ${{goal.amount}}</ion-label>
         </ion-item>
         <ion-item *ngIf="goalsList.length == 0">
           <ion-label>Sin metas registradas</ion-label>
